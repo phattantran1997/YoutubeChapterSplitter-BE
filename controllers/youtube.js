@@ -92,21 +92,5 @@ youtubeRouter.get('/download-video/:filename', async (req, res) => {
   }
 
 });
-youtubeRouter.get('/videos/:filename', (req, res) => {
-  const filename = req.params.filename+'.mp4';
-  const outputFolder = path.join(__dirname, '../public/trimmed_videos');
-  const outputFileName = path.join(
-    outputFolder,
-    `${filename}`
-  );
 
-  res.sendFile(outputFileName, (err) => {
-    if (err) {
-      console.error('Error sending file:', err);
-      if (!res.headersSent) {
-        res.status(500).send('Error sending file');
-      }
-    }
-  });
-});
 module.exports = youtubeRouter;
