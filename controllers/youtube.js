@@ -93,7 +93,7 @@ youtubeRouter.get('/download-video/:filename', async (req, res) => {
 
 });
 youtubeRouter.get('/videos/:filename', (req, res) => {
-  const filename = req.params.filename+'.mp4';
+  const filename = req.params.filename;
   const outputFolder = path.join(__dirname, '../public/trimmed_videos');
   const outputFileName = path.join(
     outputFolder,
