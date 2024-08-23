@@ -18,7 +18,8 @@ const blogSchema = new mongoose.Schema({
   title: String,
   content: String,
   videos: [{
-    type: String
+    url: String,
+    title: String
   }],
   dateCreated: Date,
   likes: Number,

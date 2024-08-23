@@ -3,6 +3,24 @@ const Blog = require("../models/blog");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
 const blog = require("../models/blog");
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const outputFolder = path.join(__dirname, '../public/trimmed_videos');
+    if (!fs.existsSync(outputFolder)) {
+      fs.mkdirSync(outputFolder);
+    }
+    cb(null, outputFolder);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${file.originalname}`);
+  }
+});
+const upload = multer({ storage: storage });
+
 
 blogRouter.get("/", async (request, response) => {
   const blogs = await Blog.find({}).populate("user", { username: 1, name: 1 });
@@ -24,6 +42,7 @@ const getTokenFrom = (request) => {
   }
   return null;
 };
+
 blogRouter.post("/", async (request, response, next) => {
   const body = request.body;
   const token = getTokenFrom(request);
@@ -144,6 +163,15 @@ blogRouter.post("/:id/comments", async (request, response) => {
   updatedBlog
     ? response.status(200).json(updatedBlog.toJSON())
     : response.status(404).end();
+});
+
+blogRouter.post('/upload-video', upload.single('video'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const videoUrl = `${req.file.filename}`; // Path to access the video
+  res.status(200).json({ url: videoUrl, title: req.file.filename });
 });
 
 module.exports = blogRouter;
