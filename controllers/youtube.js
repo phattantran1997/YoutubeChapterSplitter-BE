@@ -15,6 +15,13 @@ youtubeRouter.post('/trim-video', async (req, res) => {
     fs.mkdirSync(outputFolder);
   }
 
+  //Create Thumbnail
+  const outputThumbFolder = path.join(__dirname, '../public/thumbnail')
+  if (!fs.existsSync(outputThumbFolder)) {
+    fs.mkdirSync(outputThumbFolder);
+  }
+  
+
   try {
     const videoFile = path.join(outputFolder, `${videoId}.mp4`);
 
@@ -58,6 +65,27 @@ youtubeRouter.post('/trim-video', async (req, res) => {
           console.log(`Chapter ${index + 1} saved as ${outputFileName}`);
         }
       });
+
+
+      const outputThumbnailFileName = path.join(
+        outputThumbFolder,
+        `${videoId}_${sanitizedTitle}.png`
+      );
+      const cmd = `ffmpeg -i ${videoFile} -ss ${startTime} -vframes 1 ${outputThumbnailFileName}`;
+
+      exec(cmd, (error, stdout, stderr) => {
+          if (error) {
+              console.error(`Error creating thumbnail: ${error.message}`);
+              return;
+          }
+          if (stderr) {
+              console.error(`Stderr: ${stderr}`);
+          }
+          console.log('Thumbnail is created!');
+
+      });
+
+
     });
 
     res.send('Video trimming started');
@@ -109,4 +137,46 @@ youtubeRouter.get('/videos/:filename', (req, res) => {
     }
   });
 });
+=======
+
+youtubeRouter.get('/videos/:filename', (req, res) => {
+  const filename = req.params.filename+'.mp4';
+  const videoPath = path.join(__dirname, '../public/trimmed_videos/'+filename); 
+
+  const stat = fs.statSync(videoPath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize) {
+          res.status(416).send('Requested range not satisfiable\n' + start + ' >= ' + fileSize);
+          return;
+      }
+
+      const chunkSize = (end - start) + 1;
+      const file = fs.createReadStream(videoPath, { start, end });
+      const head = {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunkSize,
+          'Content-Type': 'video/mp4',
+      };
+
+      res.writeHead(206, head);
+      file.pipe(res);
+  } else {
+      const head = {
+          'Content-Length': fileSize,
+          'Content-Type': 'video/mp4',
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(videoPath).pipe(res);
+  }
+});
+
+>>>>>>> Stashed changes
 module.exports = youtubeRouter;
