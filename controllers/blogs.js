@@ -126,6 +126,7 @@ blogRouter.put("/:id", async (request, response, next) => {
     content: body.content,
     dateCreated: body.dateCreated,
     likes: body.likes,
+    videos: body.videos,
     comments: body.comments,
   };
   try {

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const youtubedl = require('youtube-dl-exec');
 
+
 youtubeRouter.post('/trim-video', async (req, res) => {
   const { videoId, chapters } = req.body;
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
@@ -120,27 +121,10 @@ youtubeRouter.get('/download-video/:filename', async (req, res) => {
   }
 
 });
+
+
 youtubeRouter.get('/videos/:filename', (req, res) => {
   const filename = req.params.filename;
-  const outputFolder = path.join(__dirname, '../public/trimmed_videos');
-  const outputFileName = path.join(
-    outputFolder,
-    `${filename}`
-  );
-
-  res.sendFile(outputFileName, (err) => {
-    if (err) {
-      console.error('Error sending file:', err);
-      if (!res.headersSent) {
-        res.status(500).send('Error sending file');
-      }
-    }
-  });
-});
-=======
-
-youtubeRouter.get('/videos/:filename', (req, res) => {
-  const filename = req.params.filename+'.mp4';
   const videoPath = path.join(__dirname, '../public/trimmed_videos/'+filename); 
 
   const stat = fs.statSync(videoPath);
@@ -178,5 +162,17 @@ youtubeRouter.get('/videos/:filename', (req, res) => {
   }
 });
 
->>>>>>> Stashed changes
+youtubeRouter.get('/thumbnail/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filePath = path.join(__dirname, '../public/thumbnail/'+filename); 
+
+  res.sendFile(filePath, (err) => {
+      if (err) {
+          console.error(`Không tìm thấy file: ${filePath}`);
+          res.status(404).send('Không tìm thấy hình ảnh');
+      }
+  });
+});
+
+
 module.exports = youtubeRouter;
