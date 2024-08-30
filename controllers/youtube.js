@@ -3,13 +3,26 @@ const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const youtubedl = require('youtube-dl-exec');
+const axios = require('axios');
+youtubeRouter.get('/video-details/:videoId', async (req, res) => {
+  const videoId = req.params.videoId;
+  const apiKey = process.env.YOUTUBE_API_KEY; // Store your API key in environment variables for security
+
+  try {
+    const response = await axios.get(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching video details from YouTube:', error);
+    res.status(500).json({ error: 'Failed to fetch video details from YouTube' });
+  }
+});
 
 
 youtubeRouter.post('/trim-video', async (req, res) => {
   const { videoId, chapters } = req.body;
   const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
-  // let outputFolder = process.env.TRIMMED_VIDEOS_PATH || '/tmp/';
-  // outputFolder = path.join(outputFolder, 'trimmed_videos');
 
   const outputFolder = path.join(__dirname, '../public/trimmed_videos')
   if (!fs.existsSync(outputFolder)) {

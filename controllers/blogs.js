@@ -175,4 +175,51 @@ blogRouter.post('/upload-video', upload.single('video'), (req, res) => {
   res.status(200).json({ url: videoUrl, title: req.file.filename });
 });
 
+// Add this route to your existing blogRouter
+
+blogRouter.post("/generate-blogs", async (request, response, next) => {
+  const token = getTokenFrom(request);
+  const decodedToken = jwt.verify(token, process.env.SECRET);
+  
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: "token missing or invalid" });
+  }
+
+  const user = await User.findById(decodedToken.id);
+  if (!user) {
+    return response.status(404).json({ error: "user not found" });
+  }
+
+  const blogsToCreate = [];
+  for (let i = 0; i < 1000; i++) {
+    const newBlog = new Blog({
+      title: `Test Blog ${i}`,
+      content: `This is a test blog content for Blog ${i}`,
+      videos: [
+        {
+          url: `http://localhost:3000/api/youtube/videos/test_video_${i}.mp4`,
+          thumbnail: `http://localhost:3000/api/youtube/thumbnail/test_video_${i}.png`,
+          filename: `test_video_${i}`,
+          title: `Test Video ${i}`,
+        },
+      ],
+      dateCreated: new Date(),
+      likes: 0,
+      comments: [],
+      user: user._id,
+    });
+    blogsToCreate.push(newBlog);
+  }
+
+  try {
+    const savedBlogs = await Blog.insertMany(blogsToCreate);
+    user.blogs = user.blogs.concat(savedBlogs.map(blog => blog._id));
+    await user.save();
+    response.status(201).json({ message: "1000 blogs created successfully" });
+  } catch (exception) {
+    next(exception);
+  }
+});
+
+
 module.exports = blogRouter;
